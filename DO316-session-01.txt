@@ -1,0 +1,100 @@
+https://github.com/cprakash2118/KubeVirt-DO316v418-22-March-2026
+https://reprint.forrester.com/reports/the-forrester-wavetm-multicloud-container-platforms-q3-2025-f3367e46/index.html
+https://www.cncf.io/projects/kubevirt/
+https://kubevirt.io/
+
+POint-01-#
+Technology - Multicloud Container Platforms (KubeVirt based Virtulization)
+Product - Red Hat OpenShift
+Add-Ons - Red Hat OpenShift Virtulization (OVE)
+
+1-) Cloud services editions
+ - Red Hat OpenShift Service on AWS
+ - Microsoft Azure Red Hat OpenShift
+ - Red Hat OpenShift Dedicated
+ - Red Hat OpenShift on IBM Cloud
+ 
+2-) Self-managed editions
+ - Red Hat OpenShift Kubernetes Engine          [Basic; RHOKE] 
+ - Red Hat OpenShift Container Platform         [Standard; RHOCP]
+ - Red Hat OpenShift Platform Plus              [Add-Ons; RHOPP]
+ - Red Hat OpenShift Virtualization Engine	    [Add-Ons; RHOVE]   SKU=OVE (Bare metal deployment).
+
+3-) Services & add-ons
+ - Red Hat OpenShift AI
+ - Red Hat OpenShift Lightspeed
+ - Red Hat OpenShift Virtualization                     (RHOVE)
+ - Red Hat Quay
+ - Red Hat Advanced Cluster Management for Kubernetes   (RHACM)
+ - Red Hat Advanced Cluster Security for Kubernetes     (RHACS)
+ - Red Hat Advanced Developer Suite
+ - Red Hat OpenShift Consulting 
+ 
+- OCP deployment (Install the Virtualization operator) - Virtualization/COntainerization workload 
+- OVE deployment (Deploy direct OVE on bare metal)     - Virtualization workload only.
+ 
+Training modules - 
+https://www.redhat.com/en/resources/openshift-skill-paths-datasheet
+1-# DO156/EX156 + DO256 
+or
+2-# DO316/EX316 
+3-# DO336/EX336 (OpenShift Virtualization + Ansible Automation Platform "AAP")
+4-# DO346/NoExam (Migration part via AAP).
+
+
+
+POint-02-#
+- Classroom environment (Production Setup - KT mode)
+- Table to Contents (TOC).
+1-) Users details.
+2-) Network/Domain details.
+3-) VMs/Servers details.
+
+1-) Users details:-
+    Login to VMs/Servers.
+	- student/student   (sudo access)
+	- root/redhat 
+	
+    Login to OCP cluster.
+	- admin/redhatocp       (cluster-admin - same as root w.r.t Linux).
+	- developer/developer   (member user)
+	- kubeadmin/kubeadmin-password [AT "utility" node, location=/home/lab/ocp4/auth]
+	- /home/lab/ocp4/auth/{kubeconfig,kubeadmin-password}
+	  $ cat kubeadmin-password ; echo 
+	  $ cat kubeconfig | grep server 
+	  https://api.ocp4.example.com:6443 
+	  API URL - https://api.clusterName.baseDomain:6443 [clusterName=ocp4;baseDomain=example.com]
+	- CLI login 
+	  $ oc login -u admin -p redhatocp https://api.ocp4.example.com:6443 
+	  
+	- Web Console part 
+	  $ oc whoami --show-console 
+	  https://console-openshift-console.apps.ocp4.example.com 
+	  https://appName-nsName.apps.clusterName.baseDomain
+	  
+
+2-) Network/Domain details:-
+    https://docs.redhat.com/en/documentation/red_hat_openshift_virtualization/4.18
+	
+	Network Name                    Network Domain              Network Range(CIDR)
+	Classroom Network              example.com                  172.25.254.0/24
+	Student Network                lab.example.com              172.25.250.0/24 
+	Server Network                 srv.example.com              192.168.51.0/24 
+	Cluster Network                ocp4.example.com             192.168.50.0/24 (Master/Worker)
+	
+3-) VMs/Servers details:-
+    workstation.lab.example.com     [Jump Server , oc/helm/virtctl etc]
+	bastion.lab.example.com         [COnnect workstation to classroom]
+	classroom.example.com           [COnnect to internet]
+	utility.lab.example.com         [DNS,HAproxy,DHCP,PXE,APache, NFS-Server etc]
+	server.srv.example.com          [Isolated network - for user case]
+	master01-03.ocp4.example.com    [Master nodes ]
+    worker01-02.ocp4.example.com    [worker nodes ]
+    ceph.ocp4.example.com           [ODFv4.16 deployment - External mode - allinone node]
+
+-----------------------------------------------
+VIrtual Machine (HYpervisor):-
+- HYpervisor required for to create Virtual Machine.
+
+RHEL coreOS is HYpervisor?	
+	
