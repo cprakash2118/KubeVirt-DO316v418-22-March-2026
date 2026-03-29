@@ -1,0 +1,119 @@
+# https://github.com/cprakash2118/KubeVirt-DO316v418-22-March-2026
+
+Quick Recap - 
+############
+POint-01-# Product & Technology 
+- Technology - Virtulization (Kubernetes-native) - Based on "KubeVirt".
+- Product    - Red Hat OpenShift (Technology based on MultiCloud Container Platform).
+- Add-ons    - Red Hat OpenShift Virtulization Engine (OVE).
+
+Bare metal level:-SKU - OCP/OVE 
+
+Case-01- Containerized + Virtulization workload
+Solution- OCP + OpenShift Virtulization Operator deployment (Via Operator HUB)
+
+Case-02-# Only Virtual machine workload.
+Solution- OVE deployment (No Containerized workload).
+
+Major focus areas:-
+CNI - COntainer Network INterface  
+CSI - COntainer Storage INterface (ODF=[Ceph + NooBaa] view - k8s point of view - SC,PV,PVC,OBC).
+
+------------------- Outcome ----------------
+Migrate Manually:-
+1-# VMware:-
+VMs with (k8s cluster - 3 master/worker) -> OpenShift Virtulization.
+
+2-# OpenStack:-
+VMs with (k8s cluster - 3 master/worker) -> OpenShift Virtulization
+
+
+############
+POint-02-# Classroom Setup 
+OCP cluster deployment (3master, 2 worker) - master also worker node. [192.168.50.0/24]
+ - master01-03.ocp4.example.com 
+ - worker01-02.ocp4.example.com 
+
+Storage Solution:- [192.168.50.0/24]
+Block Storage  -> RBD CSI plugins 
+file Storage   -> CephFS CSI Plugins [NFS by default disabled - can be enabled]
+Object Storage -> Connectivity required to use Object Storage (S3 API).
+ - ceph.ocp4.example.com [ODF - External mode deployment]
+
+Additional CNI use case:-
+Server.srv.example.com [192.168.51.0/24]
+
+Main node:-
+utility.ocp4.example.com   [DNS/HAproxy,DHCP,PXE,Apache,NFS-server etc]
+
+=======================================================================================================
+# Unit-1-# Red Hat OpenShift Virtualization
+
+App-01 -> Java based application 
+App-02 -> Python based application
+App-03 -> PHP based application 
+
+Case-01:- Physical Node 
+Physical Machine (PM) -> RHEL OS -> Deployed all three applications.
+FYI
+- all three applications use same custom shared libs/bins.
+- Based on requirement, applied patch/update on Java based application.
+- It might update the custom shared libs.
+- Python based application also using same custom shared libs/bins.
+- After update on custom shared libs/bins, Python not working because looking for old libs/bins.
+
+Case-02:- Virtualization (Virtual Machine).
+Physical Machine + Hypervisor (ESXi/KVM etc).
+- Hypervisor is an OS, which allow to create/delete/manage Virtual Machine (VMs.
+- Each Virtual Machine are isolated from each other.
+
+Case-03:- Containerization (Create Container).
+- Container 
+  C1- Images (libs/bins/tools/compiler etc) - Java/Python/Ruby  etc + Application code)
+  C2- Image + Sourec code 
+  Kernel is shared item.
+  FYI- very minimal effor needed (w.r.t containers) to make them isolates.
+  
+  Container Engine - crio,conatinerd,docker,mirantis Container Engine etc 
+  Container Orchestration tool like - Kubernetes (with the help of container engine).
+  
+  
+Case-04:- Kubernetes-native Virtualization:-
+https://www.cncf.io/projects/kubevirt/
+https://kubevirt.io/
+
+
+Project:-
+1-# Create namespace [my-k8s-lab]
+2-# Create 5 VMs and deploy k8sv1.33 
+Installing kubeadm (Kubernetes v1.33)
+https://v1-33.docs.kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+
+vim inventory
+    [master]
+    vm-k8s-master01
+    vm-k8s-master02
+    vm-k8s-master03
+    
+	[worker]
+	vm-k8s-worker01
+    vm-k8s-worker02	
+
+vm-ansible-node (Install ansible and setup ssh).
+    
+
+##########################
+Figure 1.2: Containerizing KVM
+
+Point-01-# 
+- Same VM runtime Stack (Libvirt + QEMU/KVM + VM) used in different Red Hat Platform [RHV, RHOVE, RHOSP].
+- But with diffrent Control Plane/ Management layer.
+
+FYI- 
+- VM execution engine is almost same but management model changed.
+- W.r.t OpenShift Virtualization - Red Hat takes the traditional KVM stack and "run it inside kubernetes/openshift) as a containerzed workload. (Containerized KVM - KubeVirt)
+  
+
+
+
+
