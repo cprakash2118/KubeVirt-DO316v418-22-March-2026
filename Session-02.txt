@@ -1,0 +1,128 @@
+##########################
+Figure 1.2: Containerizing KVM
+
+Point-01-# 
+- Same VM runtime Stack (Libvirt + QEMU/KVM + VM) used in different Red Hat Platform [RHV, RHOVE, RHOSP].
+- But with diffrent Control Plane/ Management layer.
+
+FYI- 
+- VM execution engine is almost same but management model changed.
+- W.r.t OpenShift Virtualization - Red Hat takes the traditional KVM stack and "run it inside kubernetes/openshift) as a containerzed workload. (Containerized KVM - KubeVirt).
+
+
+Backend Process of Containerizing KVM in OpenShift Virtualization.
+1-) OpenShift Virtualization takes the traditional KVM hypervisor Stack [libvirt + QMEU/KVM], and run this stack inside Kubernetes pod using KubeVirt.
+
+Each Virtual Machine (VM) = Kubernetes pod running the VM process inside the container.
+
+vm  (Virtual Machine Defination)
+vmi (Virtual Machine Instance)
+KubeVirt COntainer - launcher POD 
+
+VM-01 -> [libvirt + QEMU/KVM + VM]
+VM-02 -> [libvirt + QEMU/KVM + VM]
+VM-03 -> [libvirt + QEMU/KVM + VM]
+
+
+1-)RHV (Red Hat Virtualization):-
+- RHV-M Console/CLI  (Management console)
+- vdsm  - Agent (node agent) on each host that communicates between RHV-M & libvirt.
+- libvirt - APIs to manage KVM hypervisor.
+- QEMU/KVM - Hypervisor technology used to run/manage VM.
+- VM  - Final virtual Machine running on RHV host.
+
+Example:-
+1-# Admin Create a VM from RHV-M (UI/CLI)
+2-# RHV-M send instruction -> VDSM (Node Agent)
+3-# VDSM instruct "libvirt"
+4-# "libvirt" starts the VM using QEMU/KVM
+5-# VM runs on RHV host hardware.
+
+FYI- This is pure virtulization platform (NO Kubernetes Involved as of now).
+
+
+
+2-) Red Hat OpenShift Virtualization (Based on KubeVirt - Kubernetes-native Virtualization):-
+- OpenShift Web Console/CLI.
+  Web Console - https://console-openshift-console.apps.ocp4.example.com 
+  CLI Login   - oc login -u admin -p redhatocp https://api.ocp4.example.com:6443 
+
+- kubelet (Node agent - This is also systemd serice) - Manage pods on the node (worker/master).
+- libvirt (Inside POD) - Each VM runs its' own "libvirt" instance inside a container.
+- QEMU/KVM - Runs the VM hardware emulation 
+- VM (inside Kubernetes pod - KubeVirt Container) - VM runs as pod using virt-launcher.
+
+Note: New key components (KubeVirt Container Runtime) - KubeVirt introduce:-
+- virt-api -> expose VM CRDs 
+- virt-controller -> Orchestrates VM lifecycle.
+- virt-handler -> Run on nodes, and monitor VMs (Deployed as daemonset).
+- virt-launcher (container) -> STart libvirt + QEMU/KVM inside POD then Virtual Machine instance start.
+ 
+Backend flow in OpenShift Virtualization:-
+Example:-
+1-# Admin Creates a VM (kind: VirtualMahcine)
+    apiVersion: kubevirt.io/v1 
+	kind: VirtualMahcine
+	
+	FYI- 
+	 - VM means -> VM defination 
+     - vmi means -> Actual VM (Stand for "VirtualMachineInstance").
+2-# virt-controller - Create a VMI (VirtualMachineInstance)
+3-# virt-controller ask Kubernetes to schedule POD.
+4-# kubelet start POD containing:-
+    - virt-launcher container
+	- Inside it, libvirtd 
+	- libvirtd start QEMU/KVM.	
+5-# VM runs inside the POD, using node hardware virtulization (QMEU/KVM)
+
+
+Difference RHOVE vs RHV:-
+- In RHV - libvirt runs on the host.
+- In RHOVE - libvirt runs inside the POD (conatiner - kubevirt).
+ 
+Example-2-# Deep backend process (Complete lifecycle when you create Virtual Machine - Based on KubeVirt).
+Step-1-# User Create VM (YAML/Template - UI/CLI).
+
+YAML - VirtualMachine 
+apiVersion: kubevirt.io/v1  
+kind: VirtualMachine
+metadata: 
+  name: VirtualMachineName 
+spec:
+  running: true 
+
+
+Step-2-# virt-api updates VM CRDs
+- Validate the YAML 
+- Ensure mandatory fields must be exist (Which all needed for launching VMI)
+- Passes the updated CRD to kubernetes API.
+
+Step-3-# virt-controller create a VMI (VirtualMachineInstance).
+- Determines node scheduling 
+- check CPU/memoery requests
+- Decides which worker node should run this Virtual Machine.
+
+Step-4-# Kubernetes schedule a POD.
+ POD = virt-launcher
+ Inside this POD:-
+ - libvirtd
+ - QEMU process
+ - KVM hypervisor
+ - Resources required (volume, NICs, other etc) attached.
+ 
+Step-5-# virt-handler on the node launches the VM.
+virt-handler
+1- Notice POD -> Read VM defination
+2- Instructs virt-launcher
+3- virt-launcher -> launches libvirtd inside conatiner
+4- libvirtd -> launches QEMU/KVM
+
+Result:-
+ VM is up and running with full hardware virtulization.
+ 
+ 
+
+   
+
+
+
