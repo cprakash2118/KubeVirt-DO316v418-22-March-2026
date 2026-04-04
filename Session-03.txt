@@ -1,0 +1,91 @@
+https://github.com/cprakash2118/KubeVirt-DO316v418-22-March-2026/
+#Quick Recap (5 mins).
+- KubeVirt Based Virtulization.
+- Virtulization Engine [libvirt + QEMU/KVM]
+- Control plane - VIa OpenShift.
+
+KubeVirt Virtulization [Kubernetes-Native Virtulization]
+
+Case-01-# OS (RHEL/CentOS/SUSE) + [libvirt + QEMU/KVM] 
+Case-02-# K8s/OCP infra + [libvirt + QEMU/KVM] 
+
+KubeVirt Container -> [libvirt + QEMU/KVM + VM ]
+kubeVirt container running on RHEL coreOS.
+
+- Deploy OpenShift Virtulization.
+1-# Admin Creates a VM (kind: VirtualMahcine)
+   - instance 
+   - template 
+   - YAML file 
+   
+2-# virt-controller - Create a VMI (VirtualMachineInstance)
+3-# virt-controller ask Kubernetes to schedule POD (KubeVirt)
+4-# kubelet start POD containing:-
+    - virt-launcher container
+	- Inside it, libvirtd 
+	- libvirtd start QEMU/KVM.	
+5-# VM runs inside the POD, using node hardware virtulization (QMEU/KVM).
+
+https://github.com/cprakash2118/kubernetes-projects
+
+Namespace=ns-k8s-cluster
+VMs to be created (via Template/YAML)
+ - vm-k8s-master-01
+ - vm-k8s-worker-01
+ - vm-k8s-worker-02 
+
+- Basic & required operations w.r.t VMs.
+  - hostname setup
+  - DNS setup 
+  - YUM repo setup 
+  - Rquired packages setup.
+  - Deploy application adn access the same.
+  
+- Need to provide IP address to each VMs and access each via ssh.
+- ssh passwordless authetication across all VMs.
+  (ssh service to be enabled on KubeVirt's VMs - We required MetalLB)
+  
+- Storage Part:-
+  ODF -> Ceph (Block/File Storage-RBD/CephFS/NFS + Object Storage-RGW) + NooBaa (Object Storage via MCG)
+  
+  Kubernetes 
+  -> How to deal with Storage ?
+  -> Application deployed on k8s cluster, how you provide storage to your application?
+     SC, PV, PVC , OBC
+     	 
+-----------------------------------------------------------------------
+- Installed "OpenShift Virtulization Operator" 
+  - It's components like "HyperCoverged HCO and many other operators" which deployed application w.r.t "OpenShift-cnv" namespace.
+  
+- Create Virtual Machine via Web Console/CLI (Template/YAML).
+  While Creating Virtual Machine.
+  - namespace must be define.
+  - COmpute (CPU,RAM,Storage-Disk)
+    FYI
+	- SC,PV,PVC,CDI,DV (Understand this part).
+	- Image URL (Template/YAML).
+	- Define storage access (RWX/RWO/ROX - w.r.t PVC)
+	- Custom changes (Later we will discuss).
+	  Script -> default user create/ssh key based login enabled.
+	  Disk   -> URL; rbd-virtulization ; size ; VOlume-Access=RWX;VOlume-MOde=Block etc).
+             URL - http://utility.lab.example.com:8080/openshift4/
+			 
+virtctl create vm --name vm-k8s-worker01 --namespace ns-k8s-cluster --memory=5Gi --volume-datasource=src:openshift-virtualization-os-images/rhel9-do316
+
+----------
+LABEL='kubevirt.io/domain=vm-k8s-master01'
+POD=$(oc get pod -l ${LABEL} -o name)
+
+oc expose ${POD} --name=vm-k8s-master01 --type=LoadBalancer --selector kubevirt.io/domain=vm-k8s-master01 --port=22 -o yaml --dry-run=client | tee service-vm-k8s-master01.yaml
+
+
+LABEL='kubevirt.io/domain=vm-k8s-worker01'
+POD=$(oc get pod -l ${LABEL} -o name)
+
+oc expose ${POD} --name=vm-k8s-worker01 --type=LoadBalancer --selector kubevirt.io/domain=vm-k8s-worker01 --port=22 --port=80 -o yaml --dry-run=client | tee service-vm-k8s-worker01.yaml
+
+
+LABEL='kubevirt.io/domain=vm-k8s-worker02'
+POD=$(oc get pod -l ${LABEL} -o name)
+
+oc expose ${POD} --name=vm-k8s-worker02 --type=LoadBalancer --selector kubevirt.io/domain=vm-k8s-worker02 --port=22 --port=80 -o yaml --dry-run=client | tee service-vm-k8s-worker02.yaml
