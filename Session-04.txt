@@ -1,0 +1,193 @@
+Quick recap (10mins):-
+- OpenShift Virtulization (Based on KubeVirt - Kubernetes-Native Virtulization)
+  Virtulization Engine is same -> [libvirt + QEMU/KVM] -> Create Virtual Machine (VM).
+  
+  "RHV"/ESXi vs "OpenSHift Virtulization" Vs "OpenStack"
+  
+   Control Plane  [OCP -> CLI/GUI]
+   Virtulization Engine [([libvirt + QEMU/KVM] + Virtual Machine )] -> KubeVIrt COntainer 
+
+Case-01
+- Deploy OCP then we have installed "OpenShift Virtulization Operator"
+  OCP + OVE -> Container & VM workload can run on single platform.
+
+Case-02 
+- Deploy OVE then only VM workload can be managed.
+
+LAB level:-
+- Created Namespace (k8s-env)
+- VM created by us (Defination)
+- based on VM, VMI created 
+- Backend flow:-
+  - PVC created (Where OS to be installed Linux/Window etc)
+  - CDI/VD converted PVC to a disk and attached to respective Virtual Machine)
+- Virtual Machine is up and running 
+- Total 3 VMs (and setup the network part as well).
+- VMs operations:- 
+  - Access VMs (KubeVIrt Based) via GUI/WebConsole.
+  - CLI -> virtctl console --help 
+  - Access (users/groups; ssh connectivity)
+  - Repository Setup/sync
+  - DNS, NTP etc ...
+
+  - Access via ssh (Using metalLB)
+  - Web application deployed and verified.
+
+###################
+- namespace=ns-k8s-env
+- RHEL9 VMs created.
+- Post build tasks has been done like YUM repo;DNS client; ssh connectivity via metalLB.
+
+- vm-k8s-master-01
+- vm-k8s-worker-01
+- vm-k8s-worker-02
+
+###################
+  
+************************
+- Installation -> Using Web console via OperatorHUb 
+- Operator = "openshift Virtulization"
+
+# Components/Operators:-
+FYI- OpenSHift Virtulization:-
+     Kubernetes -> Brain 
+	 KubeVIrt -> VM Engine 
+	 Operator -> Automation Manager (Install/deploy/manage)
+	 Components -> (KVM/CDI etc) -> Execution layer.
+	 
+1-) OpenSHift Virtulization Operator (Main Entry POint).
+  - What it does?
+	- INstall and manage entire "Virtulization Stack".
+    - Deploy KubeVirt + All required Operator (META operator)
+    - Expose VM as Kubernetes resources (CRDs).
+ 
+  - Internally it creats:-
+    - KubeVirt CRDs 
+	  Example:-
+	    - VirtualMachine (vm) -> VM defination.
+        - VirtualMachineInstance (vmi) -> Actual VM instance 
+        - DataVolume (dv) 
+        - etc
+    - Controllers to manage VM lifecycle.
+	
+2-) HyperConverged Operator (HCO).
+    What it does ?
+	- Central Operator that deploy & manage all sub-components.
+	- Handles:-
+	  - KubeVIrt
+	  - CDI 
+	  - Networking  (CNI)
+	  - Storage integration (CSI).
+
+    Why HCO is very important?
+    Instead of installing:-
+    - KubeVirt
+    - CDI 
+    - Network Config 
+    - Storage COnfig 
+    - And many more 
+    
+    Just deploy HCO and it does everything automatically.
+	
+  		
+3-) KVM (Kernal-based Virtual Machine) - Core Hypervisor.
+    What it does?
+	- Autual hypervisor 
+	- Runs VMs on Linux Kernel
+	
+	RHV -> KVM run on host/node (COmpute node) - It called hypervisor.
+	RHOCS -> KVM runs inside a container (POD).
+	
+	POD -> KubeVirt -> KVM -> VM 
+	
+4-) libvirt 
+    what it does?
+	- Talks to KVM 
+	- Create VM defination (xml)
+	- Controls lifecycle (stop/start/reset/destry)
+	
+	kubeVirt -> libvirt -> KVM -> VM 
+	FYI- API layer between k8s and hypervisor
+	
+5-) QEMU Guest Agent (VM internal communication).
+    What it does?
+	
+	RUN inside the VM.
+	Provides:-
+	- IP Address
+	- FS info 
+	- User info
+	- Signals (shutdown/restart etc)
+	
+	oc describe vmi vmi-name 
+	
+	Use Cases:-
+	- Graceful shutdown
+	- Live Migration 
+	- Monitoring 
+	
+	FYI- VMware tools inside VM.
+	
+6-) COntainerized Data Importer (CDI)
+    - Import VM disk images 
+	- Creates volume for VMs 
+	- Handles formats:-
+	  - QCOW2 
+	  - RAW 
+	  - OVA 
+	- Sycn with DataVOlume 
+	
+	CDI downloads images -> Create PVC -> attaches to VMs.
+	
+	Flow:-
+	Image URL -> CDI -> PVC -> VM disk 
+	
+	Example:-
+	VMware -> datastore upload 
+	OpenStack -> Glance image import 
+	
+7-) HostPath Provisioner (HPP) - Storage Provider.
+   - Provides local storage node 
+   - Used in:-
+     - Lab level 
+	 - POc 
+	 - Non Prod
+	 
+	 
+8-) Virtual Machine Consoles.
+   - Web COnsole (VNC)
+   - SSH (Linux)
+   - RDP (Window)
+   
+
+9-) Stand-alone Virtual Machine Instances (VMIs)
+    - Running instance of VM 
+    - As same as POD (in Kubernetes).
+	
+############# End-toEnd FLow:-
+1- INstall OpenSHift Virtulization Operator 
+
+2- HCO deploys:-
+   - kubeVirt
+   - CDI 
+   - Storage 
+
+3- Create DataVolume (CDI)
+
+4- PVC created with disk images 
+
+5- Create VirtualMachine
+
+6- KubeVirt create VMI 
+
+7- POD is created 
+
+8- Inside POD:-
+   - KVM runs VM 
+   - Libvir manage it.
+
+9-) Inside VM:-
+   - QEMU agent runs 
+
+10-) Access VM via console (ssh/etc)   
+ 
