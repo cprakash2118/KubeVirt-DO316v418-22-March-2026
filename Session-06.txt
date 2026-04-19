@@ -1,0 +1,59 @@
+
+############W.r.t Container:-
+point-01:-
+- Setup the below env
+Namespace=ns-01
+pod01 -> svc01 -> route01 
+pod02 -> svc02 
+
+Namespace=ns-02 
+pod03 -> svc03 
+
+ 
+point-02:-
+- NetworkPolicy applied (w.r.t namespace) 
+- Deny all w.r.t ns-01 namespace.
+- Allow specific like np-allow-pod03-to-pod01.yaml (Defined namespace level - "book-payment-net: allow")
+  access from pod03 (w.r.t ns-02 namespace) to pod01
+  $ oc apply -f deny-all.yaml -f  np-allow-pod03-to-pod01.yaml -n ns-01
+  $ oc get namespace ns-02 --show-lables 
+  $ oc lables namespace ns-02 book-payment-net=allow
+  
+point-03:-
+- Verify your case (access pod then "curl -v telnet://pod-ip:pod-port"
+
+
+
+############ W.r.t Virtual Machine (vm) :-
+- Login as admin (cluter-admin)
+- access namespace "network-policy".
+- set lable for specific namespace allowing=db-clients
+  $ oc label namespace network-policy allowing=db-clients
+  $ oc get namespace --show-lables
+- Setup label w.r.t VMI 
+
+ Locally (within the cluster - svcName.nsName.svc.cluster.local 
+
+- database server on VMI 
+- To access that DB server locally or within the OCP cluster from other pod/vmi - svcName.nsName.svc.cluster.local
+
+
+
+  
+  
+  
+**********************
+w.r.t Namespace
+vm -> Virtual Machine defination based on this.
+1- pod 
+2- pvc -> dv (dv with cdi convert pvc to a disk and attached to the VM)
+3- vmi 
+
+
+  
+  
+  
+  
+  
+  
+  

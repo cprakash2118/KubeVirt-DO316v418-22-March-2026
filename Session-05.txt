@@ -1,0 +1,51 @@
+# Networking Part w.r.t OpenShift vs Other k8s distribution 
+
+
+Workload w.r.t Container (when deal with OCP)
+ -> Deployment -> RS -> POD 
+ -> Service (expose respective service) -> route (http/https - default TLS enabled and advance, easy to handle).
+ 
+
+
+Workload w.r.t Container (when deal with other k8s)
+ -> Deployment -> RS -> POD 
+ -> Service (expose respective service) ->  ingress.
+ ingress is a standard k8s API object used to expose http/https route to service inside a cluster.	
+ -> Requires ingress controller.
+    like NGINX/HAproxy ingress controller etc.
+ -> TLS supported (manuall effort required)
+ -> Portable (Across any k8s distribution)
+ 
+  oc expose service svc_name 
+  http://appName-nsName.apps.clusterName.baseDomain   -> 80 
+  https://appName-nsName.apps.clusterName.baseDomain  -> 443  
+  
+----------------
+Workload w.r.t Virtual Machine (VM/VMI).
+- You/me defined VM (Virtual Machine Defination) w.r.t CRD - (kind: VirtualMachine).
+  - POD 
+  - VM 
+  - VMI 
+  - DV 
+  - CDI
+  
+LABEL='kubevirt.io/domain=vm-02'
+POD=$(oc get pod -l ${LABEL} -o name)
+
+oc expose ${POD} --name=svc-vm-02 --type=LoadBalancer --selector kubevirt.io/domain=vm-02 --port=22 -o yaml --dry-run=client | tee service-vm-02-yaml.yaml
+
+From WorkStation:-
+ssh user@lb-metalLB-ip-01  vm-01 
+ssh user@lb-metalLB-ip-02  vm-02 
+
+from vm-01
+ssh user@lb-metalLB-ip-01  vm-01 
+ping pod-ip-vm-02 
+ssh pod-ip-vm-02
+
+
+
+
+
+
+
